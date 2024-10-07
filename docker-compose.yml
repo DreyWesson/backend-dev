@@ -1,0 +1,103 @@
+services:
+
+  laser_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: laser_frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+    command: npm run dev
+    networks:
+      - laser-network
+    depends_on:
+      - mongo
+      - psql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  laser_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: laser_backend
+    ports:
+      - "80:80"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    command: npm run start:dev
+    networks:
+      - laser-network
+    depends_on:
+      - mongo
+      - psql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - laser-network
+    restart: on-failure:3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  
+  mongoshell:
+    image: mongo:latest
+    container_name: mongoshell
+    command: ["sleep", "infinity"]
+    networks:
+      - laser-network
+    depends_on:
+      - mongo
+
+  psql:
+    image: postgres:latest
+    container_name: psql
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./backend/.env
+    networks:
+      - laser-network
+    restart: on-failure:3
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U $POSTGRES_USER'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  mongo_data: {}
+  psql_data: {}
+
+networks:
+  laser-network:
+    driver: bridge

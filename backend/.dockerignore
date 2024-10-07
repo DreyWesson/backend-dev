@@ -1,0 +1,19 @@
+node_modules
+*.log
+*.tmp
+.cache/
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+package-lock.json
+yarn.lock
+dist/
+build/
+*.exe
+*.o
+.env
+# .env.*
+.git/
