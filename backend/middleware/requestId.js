@@ -1,4 +1,3 @@
-// requestIdMiddleware.js
 import { randomUUID } from 'crypto';
 
 export const requestId = (req, res, next) => {

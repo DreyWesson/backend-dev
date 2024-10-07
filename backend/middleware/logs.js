@@ -52,10 +52,11 @@ class Log {
 
   logError = async (err, req, res, next) => {
     const { name, message } = err;
-    const msg = `${name}: ${message}`;
+    const errorMessage = `${name}: ${message}`;
+    const logMessage = `${req.method} ${req.originalUrl} - ${errorMessage}`;
 
     try {
-      await this.writeLog("errors", req.requestId, msg);
+      await this.writeLog("errors", req.requestId, logMessage);
     } catch (error) {
       console.error("Error logging error:", error);
     }

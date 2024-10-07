@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from "cors";
-import { logEvents, logErrors } from './middleware/logger.js';
 import { requestId } from './middleware/requestId.js';
 import { logs } from './middleware/logs.js';
 
@@ -10,8 +9,6 @@ const app = express();
 app.use(cors());
 
 app.use(requestId);
-
-// app.use(logEvents)
 app.use(logs.logRequest);
 
 
