@@ -1,48 +1,23 @@
-// server.js
-import fs from 'fs';
-import path from 'path';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
 import express from 'express';
-import logger from './logger.js'; // Import logger synchronously
-import errorMiddleware from './middleware/error.js';
-import { fileURLToPath } from 'url';
+import cors from "cors";
+import { logEvents, logErrors } from './middleware/logger.js';
+import { requestId } from './middleware/requestId.js';
+import { logs } from './middleware/logs.js';
 
-dotenv.config(); // Load environment variables
-
-// Initialize the Express app
+dotenv.config();
 const app = express();
+app.use(cors());
 
-// Get the __dirname and __filename using ES module syntax
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+app.use(requestId);
 
-// Define log directory and access log file paths
-const logsDir = path.join(__dirname, 'logs');
-const accessLogFile = path.join(logsDir, 'access.log');
+// app.use(logEvents)
+app.use(logs.logRequest);
 
-// Ensure the logs directory exists (optional, since logger.js handles it)
-if (!fs.existsSync(logsDir)) {
-  try {
-    fs.mkdirSync(logsDir, { recursive: true });
-    console.log('Logs directory created successfully.');
-  } catch (error) {
-    console.error('Failed to create logs directory:', error);
-  }
-}
 
-// Create a write stream for the access log
-const accessLogStream = fs.createWriteStream(accessLogFile, { flags: 'a' });
-
-// Configure Morgan for request logging
-app.use(morgan('combined', { stream: accessLogStream }));
-app.use(morgan('dev')); // Log to the console as well
-
-// Middleware for parsing JSON and URL-encoded form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Define some routes for testing
 app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
@@ -51,11 +26,10 @@ app.get('/error', (req, res) => {
   throw new Error('This is a test error!'); // Simulate an error for testing
 });
 
-// Use the custom error handling middleware
-app.use(errorMiddleware);
+app.use(logs.logError);
 
 // Start the server and listen on the specified port
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
