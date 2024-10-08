@@ -3,15 +3,14 @@ import { promises as fs } from "fs";
 import { createLogger, format as winstonFormat, transports } from "winston";
 import WinstonCloudWatch from "winston-cloudwatch";
 import DailyRotateFile from "winston-daily-rotate-file";
+import chalk from "chalk";
+import { format } from "date-fns";
 
-
-
-export async function ensureLogDirectory(logDirectory) {
+export async function createLogDirectory(logDirectory) {
   try {
     await fs.access(logDirectory);
   } catch {
     await fs.mkdir(logDirectory, { recursive: true });
-    console.log(`Log directory created at: ${logDirectory}`);
   }
 }
 
@@ -31,7 +30,9 @@ export function createWinstonLogger(logDirectory, dateFormat) {
         format: dateFormat, // Use the provided date format
       }),
       winstonFormat.printf(({ timestamp, level, message, requestId }) => {
-        return `${timestamp} [${level}]: ${requestId ? `(${requestId}) ` : ""}${message}`;
+        return `${timestamp} [${level}]: ${
+          requestId ? `(${requestId}) ` : ""
+        }${message}`;
       })
     ),
     transports: [
@@ -43,7 +44,9 @@ export function createWinstonLogger(logDirectory, dateFormat) {
           winstonFormat.timestamp({ format: dateFormat }),
           winstonFormat.uncolorize(),
           winstonFormat.printf(({ timestamp, level, message, requestId }) => {
-            return `${timestamp} [${level}]: ${requestId ? `(${requestId}) ` : ""}${message}`;
+            return `${timestamp} [${level}]: ${
+              requestId ? `(${requestId}) ` : ""
+            }${message}`;
           })
         ),
       }),
@@ -58,10 +61,53 @@ export function createWinstonLogger(logDirectory, dateFormat) {
           winstonFormat.colorize(),
           winstonFormat.timestamp({ format: dateFormat }),
           winstonFormat.printf(({ timestamp, level, message, requestId }) => {
-            return `${timestamp} [${level}]: ${requestId ? `(${requestId}) ` : ""}${message}`;
+            return `${timestamp} [${level.toUpperCase()}]: ${
+              requestId ? `(${requestId}) ` : ""
+            }${message}`;
           })
         ),
       }),
     ],
   });
+}
+
+function getColor(level) {
+  switch (level) {
+    case "info":
+      return chalk.blue(level.toUpperCase());
+    case "warn":
+      return chalk.yellow(level.toUpperCase());
+    case "error":
+      return chalk.red(level.toUpperCase());
+    case "debug":
+      return chalk.green(level.toUpperCase());
+    default:
+      return level.toUpperCase();
+  }
+}
+
+export function createCustomLogger(logDirectory, dateFormat) {
+  createLogDirectory(logDirectory);
+
+  const logFilePath = path.join(
+    logDirectory,
+    `application-${format(new Date(), "yyyy-MM-dd")}.log`
+  );
+
+  return {
+    log({ level, message, requestId }) {
+      const timestamp = format(new Date(), dateFormat);
+      const coloredLevel = getColor(level);
+      const reqId = requestId ? ` [RequestId: ${requestId}]` : "";
+      const logMessage = `${timestamp} [${coloredLevel}]${reqId}: ${message}`;
+
+      console.log(logMessage);
+
+      try {
+        fs.appendFile(logFilePath, logMessage, "utf8");
+      } catch (error) {
+        console.error(`Failed to write log to file: ${error.message}`);
+      }
+    },
+  };
 }

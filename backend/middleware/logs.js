@@ -1,26 +1,36 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import { ensureLogDirectory, createWinstonLogger } from '../utils/logger.utils.js'
-
+import {
+  createLogDirectory,
+  createWinstonLogger,
+  createCustomLogger,
+} from "../utils/logger.utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class Log {
   constructor(
-    logDirectory = path.join(__dirname, "..", "logs"),
-    dateFormat = "YYYY-MM-DD HH:mm:ss"
+    logDirectoryPath = path.join(__dirname, "..", "logs"),
+    dateFormat = "YYYY-MM-DD HH:mm:ss",
+    handleWriting = createCustomLogger
   ) {
     this.dateFormat = dateFormat;
-    this.logDirectory = logDirectory;
+    this.logDirectoryPath = logDirectoryPath;
 
-    ensureLogDirectory(this.logDirectory);
+    createLogDirectory(this.logDirectoryPath);
 
-    this.logger = createWinstonLogger(this.logDirectory, this.dateFormat);
+    this.logger = typeof handleWriting === "function"
+      ? handleWriting(this.logDirectoryPath, this.dateFormat)
+      : handleWriting;
   }
 
   async writeLog(level, requestId, logMessage) {
-    this.logger.log({ level, message: logMessage, requestId });
+    if (this.logger && typeof this.logger.log === "function") {
+      this.logger.log({ level, message: logMessage, requestId });
+    } else {
+      console.warn("Logger implementation does not support 'log' method.");
+    }
   }
 
   logRequest = (req, res, next) => {
@@ -58,4 +68,8 @@ class Log {
 }
 
 // Export a single instance of the Log class
-export const logs = new Log();
+export const logs = new Log(
+  path.join(__dirname, "..", "logs"),
+  "YYYY-MM-DD HH:mm:ss",
+  createWinstonLogger
+);
