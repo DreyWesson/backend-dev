@@ -1,7 +1,7 @@
 import path from "path";
-import { promises as fs } from "fs";
 import { fileURLToPath } from "url";
-import { format } from "date-fns";
+import { ensureLogDirectory, createWinstonLogger } from '../utils/logger.utils.js'
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,43 +9,28 @@ const __dirname = path.dirname(__filename);
 class Log {
   constructor(
     logDirectory = path.join(__dirname, "..", "logs"),
-    dateFormat = "yyyy-MM-dd\tHH:mm:ss"
+    dateFormat = "YYYY-MM-DD HH:mm:ss"
   ) {
     this.dateFormat = dateFormat;
     this.logDirectory = logDirectory;
+
+    ensureLogDirectory(this.logDirectory);
+
+    this.logger = createWinstonLogger(this.logDirectory, this.dateFormat);
   }
 
-  createDirectory = async () => {
-    try {
-      await fs.access(this.logDirectory);
-    } catch {
-      await fs.mkdir(this.logDirectory, { recursive: true });
-    }
-  };
-
-  writeLog = async (filename, requestId, logMessage) => {
-    const dateTime = format(new Date(), this.dateFormat);
-    const message = `${dateTime}\t${requestId}\t${logMessage}\n`;
-    const filePath = path.join(this.logDirectory, `${filename}.log`);
-
-    try {
-      await this.createDirectory();
-      await fs.appendFile(filePath, message, "utf8");
-    } catch (error) {
-      console.error("Error logging event: ", error);
-    }
-  };
+  async writeLog(level, requestId, logMessage) {
+    this.logger.log({ level, message: logMessage, requestId });
+  }
 
   logRequest = (req, res, next) => {
     const { method, headers, url, requestId } = req;
     const { origin } = headers;
     const message = `${method}\t${origin || "Unknown Origin"}\t${url}`;
 
-    this.writeLog("requests", requestId, message)
-      .then(() => {
-        // Optional: Log success if needed
-      })
-      .catch((error) => console.log(error));
+    this.writeLog("info", requestId, message).catch((error) =>
+      console.error("Error logging request:", error)
+    );
 
     next();
   };
@@ -56,21 +41,21 @@ class Log {
     const logMessage = `${req.method} ${req.originalUrl} - ${errorMessage}`;
 
     try {
-      await this.writeLog("errors", req.requestId, logMessage);
-    } catch (error) {
-      console.error("Error logging error:", error);
+      await this.writeLog("error", req.requestId, logMessage);
+    } catch (logError) {
+      console.error("Error logging error:", logError);
     }
 
     res.status(500).json({
       status: "error",
       statusCode: 500,
-      message: msg,
+      message: errorMessage,
       errors: ["Internal Server Error"],
       timeStamp: new Date().toISOString(),
       requestId: req.requestId,
     });
-
   };
 }
 
+// Export a single instance of the Log class
 export const logs = new Log();
