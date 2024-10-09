@@ -32,7 +32,7 @@ function getEncryptionKey(secret) {
   return Buffer.from(secret, "utf8");
 }
 
-export function decrypt(encryptedData, secret) {
+export function decrypt(encryptedData, secret = process.env.ENCRYPTION_SECRET_KEY) {
   const key = getEncryptionKey(secret);
   const [ivHex, encryptedText, authTagHex] = encryptedData.split(":");
 
@@ -46,3 +46,7 @@ export function decrypt(encryptedData, secret) {
 
   return decrypted;
 }
+
+export const decryptMetadata = (data, secret) => {
+  return (JSON.parse(decrypt(data, secret)));
+};
