@@ -16,17 +16,17 @@ export async function createLogDirectory(logDirectory) {
 
 export function createWinstonLogger(logDirectory, dateFormat) {
   const esTransportOptions = {
-    level: "info",
+    level: "debug",
     indexPrefix: "application-logs",
     clientOpts: {
       node: process.env.ELASTICSEARCH_URL || "http://localhost:9200",
-      auth: {
-        username: process.env.ELASTICSEARCH_USERNAME || "",
-        password: process.env.ELASTICSEARCH_PASSWORD || "",
-      },
+      // auth: {
+      //   username: process.env.ELASTICSEARCH_USERNAME || "",
+      //   password: process.env.ELASTICSEARCH_PASSWORD || "",
+      // },
     },
     transformer: (logData) => ({
-      "@timestamp": () => new Date().toISOString(),
+      "@timestamp": new Date().toISOString(),
       severity: logData.level,
       message: logData.message,
       requestId: logData.requestId || "",
@@ -34,6 +34,19 @@ export function createWinstonLogger(logDirectory, dateFormat) {
     }),
   };
   const esTransport = new ElasticsearchTransport(esTransportOptions);
+
+  esTransport.on("error", (error) => {
+    console.error("Elasticsearch Transport Error:", error);
+  });
+  esTransport.on("logged", (info) => {
+    console.log("Log successfully sent to Elasticsearch:", info);
+  });
+  esTransport.on("rejected", (rejection) => {
+    console.error("Log rejected by Elasticsearch:", rejection);
+  });
+  esTransport.on("warning", (warning) => {
+    console.warn("Elasticsearch Transport Warning:", warning);
+  });
 
   const dailyRotateTransport = new DailyRotateFile({
     filename: path.join(logDirectory, "application-%DATE%.log"),
@@ -64,6 +77,47 @@ export function createWinstonLogger(logDirectory, dateFormat) {
       }),
     ],
   });
+}
+
+function getColor(level) {
+  switch (level) {
+    case "info":
+      return chalk.blue(level.toUpperCase());
+    case "warn":
+      return chalk.yellow(level.toUpperCase());
+    case "error":
+      return chalk.red(level.toUpperCase());
+    case "debug":
+      return chalk.green(level.toUpperCase());
+    default:
+      return level.toUpperCase();
+  }
+}
+
+export function createCustomLogger(logDirectory, dateFormat) {
+  createLogDirectory(logDirectory);
+
+  const logFilePath = path.join(
+    logDirectory,
+    `application-${format(new Date(), "yyyy-MM-dd")}.log`
+  );
+
+  return {
+    log({ level, message, requestId }) {
+      const timestamp = format(new Date(), dateFormat);
+      const coloredLevel = getColor(level);
+      const reqId = requestId ? ` [RequestId: ${requestId}]` : "";
+      const logMessage = `${timestamp} [${coloredLevel}]${reqId}: ${message}`;
+
+      console.log(logMessage);
+
+      try {
+        fs.appendFile(logFilePath, logMessage, "utf8");
+      } catch (error) {
+        console.error(`Failed to write log to file: ${error.message}`);
+      }
+    },
+  };
 }
 
 // export function createWinstonLogger(logDirectory, dateFormat) {
@@ -122,44 +176,3 @@ export function createWinstonLogger(logDirectory, dateFormat) {
 //     ],
 //   });
 // }
-
-function getColor(level) {
-  switch (level) {
-    case "info":
-      return chalk.blue(level.toUpperCase());
-    case "warn":
-      return chalk.yellow(level.toUpperCase());
-    case "error":
-      return chalk.red(level.toUpperCase());
-    case "debug":
-      return chalk.green(level.toUpperCase());
-    default:
-      return level.toUpperCase();
-  }
-}
-
-export function createCustomLogger(logDirectory, dateFormat) {
-  createLogDirectory(logDirectory);
-
-  const logFilePath = path.join(
-    logDirectory,
-    `application-${format(new Date(), "yyyy-MM-dd")}.log`
-  );
-
-  return {
-    log({ level, message, requestId }) {
-      const timestamp = format(new Date(), dateFormat);
-      const coloredLevel = getColor(level);
-      const reqId = requestId ? ` [RequestId: ${requestId}]` : "";
-      const logMessage = `${timestamp} [${coloredLevel}]${reqId}: ${message}`;
-
-      console.log(logMessage);
-
-      try {
-        fs.appendFile(logFilePath, logMessage, "utf8");
-      } catch (error) {
-        console.error(`Failed to write log to file: ${error.message}`);
-      }
-    },
-  };
-}
