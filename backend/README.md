@@ -12,3 +12,19 @@ Custom Setup or Use Wiston and Morgan
 [Generate and log unique request ID in Express.js — Part 1](https://medium.com/@joshuagame/generate-and-log-unique-request-id-in-express-js-part-1-a7b11411a69)
 [Getting Started with Logging in Node.js](https://stackify.com/node-js-logging/)
 [Ultimate guide about logging in Nodejs and its implementation](https://ritikchourasiya.medium.com/ultimate-guide-about-logging-in-nodejs-and-its-implementation-db593d8ddb54)
+
+### Elastic Search
+
+Running on port:
+
+```bash
+http://localhost:9200
+```
+
+### Kibana
+
+Running on port:
+
+```bash
+http://localhost:5601
+```

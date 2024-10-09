@@ -1,7 +1,7 @@
 import path from "path";
 import { promises as fs } from "fs";
 import { createLogger, format as winstonFormat, transports } from "winston";
-import WinstonCloudWatch from "winston-cloudwatch";
+import { ElasticsearchTransport } from "winston-elasticsearch";
 import DailyRotateFile from "winston-daily-rotate-file";
 import chalk from "chalk";
 import { format } from "date-fns";
@@ -15,6 +15,26 @@ export async function createLogDirectory(logDirectory) {
 }
 
 export function createWinstonLogger(logDirectory, dateFormat) {
+  const esTransportOptions = {
+    level: "info",
+    indexPrefix: "application-logs",
+    clientOpts: {
+      node: process.env.ELASTICSEARCH_URL || "http://localhost:9200",
+      auth: {
+        username: process.env.ELASTICSEARCH_USERNAME || "",
+        password: process.env.ELASTICSEARCH_PASSWORD || "",
+      },
+    },
+    transformer: (logData) => ({
+      "@timestamp": () => new Date().toISOString(),
+      severity: logData.level,
+      message: logData.message,
+      requestId: logData.requestId || "",
+      metadata: logData.metadata || {},
+    }),
+  };
+  const esTransport = new ElasticsearchTransport(esTransportOptions);
+
   const dailyRotateTransport = new DailyRotateFile({
     filename: path.join(logDirectory, "application-%DATE%.log"),
     datePattern: "YYYY-MM-DD",
@@ -26,39 +46,14 @@ export function createWinstonLogger(logDirectory, dateFormat) {
 
   return createLogger({
     format: winstonFormat.combine(
-      winstonFormat.timestamp({
-        format: dateFormat, // Use the provided date format
-      }),
-      winstonFormat.printf(({ timestamp, level, message, requestId }) => {
-        return `${timestamp} [${level}]: ${
-          requestId ? `(${requestId}) ` : ""
-        }${message}`;
-      })
+      winstonFormat.timestamp({ format: dateFormat }),
+      winstonFormat.json()
     ),
     transports: [
       dailyRotateTransport,
-      new transports.File({
-        filename: path.join(logDirectory, "errors.log"),
-        level: "error",
-        format: winstonFormat.combine(
-          winstonFormat.timestamp({ format: dateFormat }),
-          winstonFormat.uncolorize(),
-          winstonFormat.printf(({ timestamp, level, message, requestId }) => {
-            return `${timestamp} [${level}]: ${
-              requestId ? `(${requestId}) ` : ""
-            }${message}`;
-          })
-        ),
-      }),
-      new WinstonCloudWatch({
-        logGroupName: "MyApplicationLogs",
-        logStreamName: "MyApplicationStream",
-        awsRegion: process.env.AWS_REGION || "us-east-1",
-        jsonMessage: true,
-      }),
+      esTransport,
       new transports.Console({
         format: winstonFormat.combine(
-          winstonFormat.colorize(),
           winstonFormat.timestamp({ format: dateFormat }),
           winstonFormat.printf(({ timestamp, level, message, requestId }) => {
             return `${timestamp} [${level.toUpperCase()}]: ${
@@ -70,6 +65,63 @@ export function createWinstonLogger(logDirectory, dateFormat) {
     ],
   });
 }
+
+// export function createWinstonLogger(logDirectory, dateFormat) {
+//   const dailyRotateTransport = new DailyRotateFile({
+//     filename: path.join(logDirectory, "application-%DATE%.log"),
+//     datePattern: "YYYY-MM-DD",
+//     zippedArchive: true,
+//     maxSize: "20m",
+//     maxFiles: "14d",
+//     level: "info",
+//   });
+
+//   return createLogger({
+//     format: winstonFormat.combine(
+//       winstonFormat.timestamp({
+//         format: dateFormat,
+//       }),
+//       winstonFormat.printf(({ timestamp, level, message, requestId }) => {
+//         return `${timestamp} [${level}]: ${
+//           requestId ? `(${requestId}) ` : ""
+//         }${message}`;
+//       })
+//     ),
+//     transports: [
+//       dailyRotateTransport,
+//       new transports.File({
+//         filename: path.join(logDirectory, "errors.log"),
+//         level: "error",
+//         format: winstonFormat.combine(
+//           winstonFormat.timestamp({ format: dateFormat }),
+//           winstonFormat.uncolorize(),
+//           winstonFormat.printf(({ timestamp, level, message, requestId }) => {
+//             return `${timestamp} [${level}]: ${
+//               requestId ? `(${requestId}) ` : ""
+//             }${message}`;
+//           })
+//         ),
+//       }),
+//       new WinstonCloudWatch({
+//         logGroupName: "MyApplicationLogs",
+//         logStreamName: "MyApplicationStream",
+//         awsRegion: process.env.AWS_REGION || "us-east-1",
+//         jsonMessage: true,
+//       }),
+//       new transports.Console({
+//         format: winstonFormat.combine(
+//           winstonFormat.colorize(),
+//           winstonFormat.timestamp({ format: dateFormat }),
+//           winstonFormat.printf(({ timestamp, level, message, requestId }) => {
+//             return `${timestamp} [${level.toUpperCase()}]: ${
+//               requestId ? `(${requestId}) ` : ""
+//             }${message}`;
+//           })
+//         ),
+//       }),
+//     ],
+//   });
+// }
 
 function getColor(level) {
   switch (level) {

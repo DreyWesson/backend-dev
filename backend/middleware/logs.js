@@ -43,7 +43,7 @@ class Log {
     const { method, headers, url, metadata } = req;
     const { origin } = headers;
     const requestId = decryptMetadata(metadata).requestId;
-    const message = `${method}\t${origin || "Unknown Origin"}\t${url}`;
+    const message = `${method} ${origin || "Unknown Origin"} ${url}`;
 
     this.writeLog("info", requestId, message).catch((error) =>
       console.error("Error logging request:", error)
@@ -77,7 +77,7 @@ class Log {
 
 const setArgs = (type = "custom") => [
   path.join(__dirname, "..", "logs"),
-  type !== "winston" ? "yyyy-MM-dd HH:mm:ss" : "YYYY-MM-DD HH:mm:ss",
+  type !== "winston" ? "yyyy-MM-dd HH:mm:ss" : "YYYY-MM-DD hh:mm:ss",
   type !== "winston" ? createCustomLogger : createWinstonLogger
 ];
 
