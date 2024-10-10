@@ -56,7 +56,7 @@ class Log {
     const { name, message } = err;
     const errorMessage = `${name}: ${message}`;
     const logMessage = `${req.method} ${req.originalUrl} - ${errorMessage}`;
-    const requestId = decryptMetadata(metadata).requestId;
+    const requestId = decryptMetadata(req.metadata).requestId;
 
     try {
       await this.writeLog("error", requestId, logMessage);
