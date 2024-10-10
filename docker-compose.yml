@@ -105,13 +105,13 @@ services:
     image: docker.elastic.co/logstash/logstash:8.3.0
     container_name: logstash
     volumes:
-      - ./logstash/pipeline:/usr/share/logstash/pipeline  # Mount the Logstash configuration directory
-      - ./backend/logs:/logs  # Mount the backend logs directory to Logstash
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./backend/logs:/logs
     ports:
-      - "5044:5044"  # Default port for Logstash input
-      - "9600:9600"  # Monitoring API
-    environment:
-      LS_JAVA_OPTS: "-Xms256m -Xmx256m"  # Adjust memory settings as needed
+      - "5044:5044"
+      - "9600:9600"
+    # environment:
+    #   LS_JAVA_OPTS: "-Xms256m -Xmx256m"
     depends_on:
       - elasticsearch
     networks:
