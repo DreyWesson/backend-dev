@@ -3,7 +3,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: laser_frontend
+    container_name: frontend
     ports:
       - "3000:3000"
     env_file:
@@ -27,7 +27,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: laser_backend
+    container_name: backend
     ports:
       - "80:80"
     env_file:

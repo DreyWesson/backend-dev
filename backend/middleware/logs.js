@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 class Log {
   constructor(
     logDirectoryPath = path.join(__dirname, "..", "logs"),
-    dateFormat = "YYYY-MM-DD HH:mm:ss",
+    dateFormat = "yyyy-MM-dd HH:mm:ss",
     handleWriting = createCustomLogger
   ) {
     this.dateFormat = dateFormat;
@@ -25,10 +25,7 @@ class Log {
 
     createLogDirectory(this.logDirectoryPath);
 
-    this.logger =
-      typeof handleWriting === "function"
-        ? handleWriting(this.logDirectoryPath, this.dateFormat)
-        : handleWriting;
+    this.logger = handleWriting(this.logDirectoryPath, this.dateFormat);
   }
 
   async writeLog(level, requestId, logMessage) {
@@ -75,10 +72,8 @@ class Log {
   };
 }
 
-const setArgs = (type = "custom") => [
+export const logs = new Log(
   path.join(__dirname, "..", "logs"),
-  type !== "winston" ? "yyyy-MM-dd HH:mm:ss" : "YYYY-MM-DD hh:mm:ss",
-  type !== "winston" ? createCustomLogger : createWinstonLogger
-];
-
-export const logs = new Log(...setArgs("winston"));
+  "yyyy-MM-dd HH:mm:ss",
+  createCustomLogger
+);

@@ -72,7 +72,7 @@ export function createCustomLogger(logDirectory, dateFormat) {
       const timestamp = format(new Date(), dateFormat);
       const coloredLevel = getColor(level);
       const reqId = requestId ? ` [RequestId: ${requestId}]` : "";
-      const logMessage = `${timestamp} [${coloredLevel}]${reqId}: ${message}`;
+      const logMessage = `${timestamp} [${coloredLevel}]${reqId}: ${message}\n`;
 
       console.log(logMessage);
 
