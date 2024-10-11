@@ -1,0 +1,28 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - laser-network
+    restart: on-failure:3
+
+  psql:
+    image: postgres:latest
+    container_name: psql
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+    networks:
+      - laser-network
+    restart: on-failure:3
+
+volumes:
+  mongo_data: {}
+  psql_data: {}

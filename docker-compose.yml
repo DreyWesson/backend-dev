@@ -1,141 +1,27 @@
+
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend
-    ports:
-      - "3000:3000"
-    env_file:
-      - ./frontend/.env
-    volumes:
-      - ./frontend:/app
-    command: npm run dev
+  base:
+    image: busybox:latest
     networks:
       - laser-network
-    depends_on:
-      - mongo
-      - psql
-      - elasticsearch
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend
-    ports:
-      - "80:80"
-    env_file:
-      - ./backend/.env
-    volumes:
-      - ./backend:/app
-      - ./backend/logs:/logs  # Mount the backend logs directory to Logstash
-    command: npm run start:dev
-    networks:
-      - laser-network
-    depends_on:
-      - mongo
-      - psql
-      - elasticsearch
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  mongo:
-    image: mongo:latest
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - laser-network
-    restart: on-failure:3
-
-  psql:
-    image: postgres:latest
-    container_name: psql
-    ports:
-      - "5432:5432"
-    env_file:
-      - ./backend/.env
-    networks:
-      - laser-network
-    restart: on-failure:3
-    volumes:
-      - psql_data:/var/lib/postgresql/data
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.0
-    container_name: elasticsearch
-    environment:
-      - node.name=elasticsearch
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - xpack.security.enabled=false
-    ports:
-      - "9200:9200"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    networks:
-      - laser-network
-    restart: always
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.3.0
-    container_name: kibana
-    ports:
-      - "5601:5601"
-    environment:
-      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
-    networks:
-      - laser-network
-    depends_on:
-      - elasticsearch
-    restart: always
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.3.0
-    container_name: logstash
-    volumes:
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-      - ./backend/logs:/logs
-    ports:
-      - "5044:5044"
-      - "9600:9600"
-    # environment:
-    #   LS_JAVA_OPTS: "-Xms256m -Xmx256m"
-    depends_on:
-      - elasticsearch
-    networks:
-      - laser-network
-    restart: always
+networks:
+  laser-network:
+    driver: bridge
 
 volumes:
   mongo_data: {}
   psql_data: {}
   es_data: {}
 
-networks:
-  laser-network:
-    driver: bridge
-
 
 
 # services:
-
 #   frontend:
 #     build:
 #       context: ./frontend
 #       dockerfile: Dockerfile
-#     container_name: laser_frontend
+#     container_name: frontend
 #     ports:
 #       - "3000:3000"
 #     env_file:
@@ -159,13 +45,14 @@ networks:
 #     build:
 #       context: ./backend
 #       dockerfile: Dockerfile
-#     container_name: laser_backend
+#     container_name: backend
 #     ports:
 #       - "80:80"
 #     env_file:
 #       - ./backend/.env
 #     volumes:
 #       - ./backend:/app
+#       - ./backend/logs:/logs  # Mount the backend logs directory to Logstash
 #     command: npm run start:dev
 #     networks:
 #       - laser-network
@@ -178,7 +65,7 @@ networks:
 #       options:
 #         max-size: "10m"
 #         max-file: "3"
-  
+
 #   mongo:
 #     image: mongo:latest
 #     container_name: mongo
@@ -189,25 +76,6 @@ networks:
 #     networks:
 #       - laser-network
 #     restart: on-failure:3
-#     logging:
-#       driver: "json-file"
-#       options:
-#         max-size: "10m"
-#         max-file: "3"
-#     healthcheck:
-#       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-#       interval: 30s
-#       timeout: 10s
-#       retries: 5
-  
-#   mongoshell:
-#     image: mongo:latest
-#     container_name: mongoshell
-#     command: ["sleep", "infinity"]
-#     networks:
-#       - laser-network
-#     depends_on:
-#       - mongo
 
 #   psql:
 #     image: postgres:latest
@@ -221,61 +89,52 @@ networks:
 #     restart: on-failure:3
 #     volumes:
 #       - psql_data:/var/lib/postgresql/data
-#     healthcheck:
-#       test: ["CMD-SHELL", "sh -c 'pg_isready -U $POSTGRES_USER'"]
-#       interval: 30s
-#       timeout: 10s
-#       retries: 5
 
 #   elasticsearch:
-#       image: docker.elastic.co/elasticsearch/elasticsearch:8.3.0
-#       container_name: elasticsearch
-#       environment:
-#         - node.name=elasticsearch
-#         - discovery.type=single-node
-#         - ES_JAVA_OPTS=-Xms512m -Xmx512m  # Adjust memory limits as needed
-#         - xpack.security.enabled=false
-#       ports:
-#         - "9200:9200"  # Expose Elasticsearch on port 9200
-#       volumes:
-#         - es_data:/usr/share/elasticsearch/data
-#       networks:
-#         - laser-network
-#       restart: always
-#       healthcheck:
-#         test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
-#         interval: 30s
-#         timeout: 10s
-#         retries: 5
+#     image: docker.elastic.co/elasticsearch/elasticsearch:8.3.0
+#     container_name: elasticsearch
+#     environment:
+#       - node.name=elasticsearch
+#       - discovery.type=single-node
+#       - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#       - xpack.security.enabled=false
+#     ports:
+#       - "9200:9200"
+#     volumes:
+#       - es_data:/usr/share/elasticsearch/data
+#     networks:
+#       - laser-network
+#     restart: always
 
 #   kibana:
 #     image: docker.elastic.co/kibana/kibana:8.3.0
 #     container_name: kibana
 #     ports:
-#       - "5601:5601"  # Expose Kibana on port 5601
+#       - "5601:5601"
 #     environment:
 #       ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
 #     networks:
 #       - laser-network
 #     depends_on:
-#       - elasticsearch  # Wait for Elasticsearch to be available before starting Kibana
+#       - elasticsearch
 #     restart: always
 
 #   logstash:
 #     image: docker.elastic.co/logstash/logstash:8.3.0
 #     container_name: logstash
 #     volumes:
-#       - ./logstash:/usr/share/logstash/pipeline  # Mount local logstash directory to container
-#       - /path/to/your/logs:/logs  # Mount the host log directory to the container
+#       - ./logstash/pipeline:/usr/share/logstash/pipeline
+#       - ./backend/logs:/logs
 #     ports:
-#       - "5044:5044"  # Default port for Logstash Beats input
-#       - "9600:9600"  # Port for monitoring Logstash
-#     environment:
-#       LS_JAVA_OPTS: "-Xms256m -Xmx256m"  # Adjust memory usage as necessary
+#       - "5044:5044"
+#       - "9600:9600"
+#     # environment:
+#     #   LS_JAVA_OPTS: "-Xms256m -Xmx256m"
 #     depends_on:
 #       - elasticsearch
 #     networks:
 #       - laser-network
+#     restart: always
 
 # volumes:
 #   mongo_data: {}

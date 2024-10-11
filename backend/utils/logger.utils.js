@@ -74,7 +74,9 @@ export function createCustomLogger(logDirectory, dateFormat) {
       const reqId = requestId ? ` [RequestId: ${requestId}]` : "";
       const logMessage = `${timestamp} [${coloredLevel}]${reqId}: ${message}\n`;
 
-      console.log(logMessage);
+      if (process.env.NODE_ENV === "development") {
+        console.log(logMessage);
+      }
 
       try {
         fs.appendFile(logFilePath, logMessage, "utf8");
