@@ -2,8 +2,8 @@ import path from "path";
 import { promises as fs } from "fs";
 import chalk from "chalk";
 import { format } from "date-fns";
-import DailyRotateFile from "winston-daily-rotate-file";
-import { createLogger, format as winstonFormat, transports as winstonTransports } from "winston";
+// import DailyRotateFile from "winston-daily-rotate-file";
+// import { createLogger, format as winstonFormat, transports as winstonTransports } from "winston";
 
 export async function createLogDirectory(logDirectory) {
   try {
@@ -11,37 +11,6 @@ export async function createLogDirectory(logDirectory) {
   } catch {
     await fs.mkdir(logDirectory, { recursive: true });
   }
-}
-
-export function createWinstonLogger(logDirectory, dateFormat) {
-  const dailyRotateTransport = new DailyRotateFile({
-    filename: path.join(logDirectory, "application-%DATE%.log"),
-    datePattern: "YYYY-MM-DD",
-    zippedArchive: true,
-    maxSize: "20m",
-    maxFiles: "14d",
-    level: "info",
-  });
-
-  return createLogger({
-    format: winstonFormat.combine(
-      winstonFormat.timestamp({ format: dateFormat }),
-      winstonFormat.json() // Store logs in JSON format
-    ),
-    transports: [
-      dailyRotateTransport,
-      new winstonTransports.Console({
-        format: winstonFormat.combine(
-          winstonFormat.timestamp({ format: dateFormat }),
-          winstonFormat.printf(({ timestamp, level, message, requestId }) => {
-            return `${timestamp} [${level.toUpperCase()}]: ${
-              requestId ? `(${requestId}) ` : ""
-            }${message}`;
-          })
-        ),
-      }),
-    ],
-  });
 }
 
 function getColor(level) {
@@ -68,7 +37,7 @@ export function createCustomLogger(logDirectory, dateFormat) {
   );
 
   return {
-    log({ level, message, requestId }) {
+    log: async ({ level, message, requestId }) => {
       const timestamp = format(new Date(), dateFormat);
       const coloredLevel = getColor(level);
       const reqId = requestId ? ` [RequestId: ${requestId}]` : "";
@@ -79,10 +48,41 @@ export function createCustomLogger(logDirectory, dateFormat) {
       }
 
       try {
-        fs.appendFile(logFilePath, logMessage, "utf8");
+        await fs.appendFile(logFilePath, logMessage, "utf8");
       } catch (error) {
         console.error(`Failed to write log to file: ${error.message}`);
       }
     },
   };
 }
+
+// export function createWinstonLogger(logDirectory, dateFormat) {
+//   const dailyRotateTransport = new DailyRotateFile({
+//     filename: path.join(logDirectory, "application-%DATE%.log"),
+//     datePattern: "YYYY-MM-DD",
+//     zippedArchive: true,
+//     maxSize: "20m",
+//     maxFiles: "14d",
+//     level: "info",
+//   });
+
+//   return createLogger({
+//     format: winstonFormat.combine(
+//       winstonFormat.timestamp({ format: dateFormat }),
+//       winstonFormat.json() // Store logs in JSON format
+//     ),
+//     transports: [
+//       dailyRotateTransport,
+//       new winstonTransports.Console({
+//         format: winstonFormat.combine(
+//           winstonFormat.timestamp({ format: dateFormat }),
+//           winstonFormat.printf(({ timestamp, level, message, requestId }) => {
+//             return `${timestamp} [${level.toUpperCase()}]: ${
+//               requestId ? `(${requestId}) ` : ""
+//             }${message}`;
+//           })
+//         ),
+//       }),
+//     ],
+//   });
+// }
