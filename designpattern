@@ -1,0 +1,926 @@
+1. Creational Patterns:
+    Singleton
+        class Singleton {
+            static #instance;
+            constructor() {
+                if (Singleton.#instance) {
+                return Singleton.#instance;
+                }
+                Singleton.#instance = this;
+            }
+            static getInstance() {
+                return Singleton.#instance || new Singleton();
+            }
+        }
+    Factory Method
+        class Creator {
+            factoryMethod() {
+                throw new Error("factoryMethod must be implemented");
+            }
+            someOperation() {
+                const product = this.factoryMethod();
+                return `Creator: The same creator's code has just worked with ${product.operation()}`;
+            }
+        }
+
+        class ConcreteCreator1 extends Creator {
+            factoryMethod() {
+                return new ConcreteProduct1();
+            }
+        }
+
+        class Product {
+            operation() {
+                throw new Error("operation must be implemented");
+            }
+        }
+
+        class ConcreteProduct1 extends Product {
+            operation() {
+                return '{Result of ConcreteProduct1}';
+            }
+        }
+    Abstract Factory
+        class AbstractFactory {
+            createProductA() {
+                throw new Error("Method 'createProductA()' must be implemented.");
+            }
+            createProductB() {
+                throw new Error("Method 'createProductB()' must be implemented.");
+            }
+        }
+
+        class ConcreteFactory1 extends AbstractFactory {
+            createProductA() {
+                return new ConcreteProductA1();
+            }
+            createProductB() {
+                return new ConcreteProductB1();
+            }
+        }
+
+        class AbstractProductA {
+            usefulFunctionA() {
+                throw new Error("Method 'usefulFunctionA()' must be implemented.");
+            }
+        }
+
+        class ConcreteProductA1 extends AbstractProductA {
+            usefulFunctionA() {
+                return "The result of the product A1.";
+            }
+        }
+    Builder
+        class Builder {
+            producePartA() {}
+            producePartB() {}
+            producePartC() {}
+        }
+
+        class ConcreteBuilder1 extends Builder {
+            constructor() {
+                super();
+                this.reset();
+            }
+        
+            reset() {
+                this.product = new Product1();
+            }
+        
+            producePartA() {
+                this.product.parts.push('PartA1');
+            }
+        
+            producePartB() {
+                this.product.parts.push('PartB1');
+            }
+        
+            producePartC() {
+                this.product.parts.push('PartC1');
+            }
+        
+            getProduct() {
+                const result = this.product;
+                this.reset();
+                return result;
+            }
+        }
+
+        class Product1 {
+            constructor() {
+                this.parts = [];
+            }
+            
+            listParts() {
+                console.log(`Product parts: ${this.parts.join(', ')}`);
+            }
+        }
+
+        class Director {
+            constructor() {
+                this.builder = null;
+            }
+            
+            setBuilder(builder) {
+                this.builder = builder;
+            }
+            
+            buildMinimalViableProduct() {
+                this.builder.producePartA();
+            }
+            
+            buildFullFeaturedProduct() {
+                this.builder.producePartA();
+                this.builder.producePartB();
+                this.builder.producePartC();
+            }
+        }
+    Prototype
+        class Prototype {
+            clone() {
+                throw new Error("Method 'clone()' must be implemented.");
+            }
+        }
+
+        class ConcretePrototype extends Prototype {
+            constructor(field) {
+                super();
+                this.field = field;
+            }
+            
+            clone() {
+                return new ConcretePrototype(this.field);
+            }
+        }
+    Module
+        const Module = (function() {
+            let privateVariable = 'I am private';
+            
+            function privateMethod() {
+                console.log('This is a private method');
+            }
+            
+            return {
+                publicMethod: function() {
+                console.log('This is a public method');
+                console.log(privateVariable);
+                privateMethod();
+                }
+            };
+        })();
+
+        Module.publicMethod();
+2. Structural Patterns:
+    Adapter
+    Bridge
+    Composite
+    Decorator
+    Facade
+    Flyweight
+    Proxy
+
+Adapter:
+javascript
+class OldPrinter {
+  print(str) {
+    console.log(`Old Printer: ${str}`);
+  }
+}
+
+class NewPrinter {
+  printModern(str) {
+    console.log(`New Printer: ${str}`);
+  }
+}
+
+class PrinterAdapter {
+  constructor(newPrinter) {
+    this.newPrinter = newPrinter;
+  }
+
+  print(str) {
+    this.newPrinter.printModern(str);
+  }
+}
+
+const oldPrinter = new OldPrinter();
+const newPrinter = new NewPrinter();
+const adapter = new PrinterAdapter(newPrinter);
+
+oldPrinter.print("Hello");  // Old Printer: Hello
+adapter.print("Hello");     // New Printer: Hello
+
+Bridge:
+javascript
+class Abstraction {
+  constructor(implementation) {
+    this.implementation = implementation;
+  }
+
+  operation() {
+    return `Abstraction: ${this.implementation.operationImplementation()}`;
+  }
+}
+
+class Implementation {
+  operationImplementation() {
+    throw new Error("operationImplementation() must be implemented");
+  }
+}
+
+class ConcreteImplementationA extends Implementation {
+  operationImplementation() {
+    return "ConcreteImplementationA";
+  }
+}
+
+class ConcreteImplementationB extends Implementation {
+  operationImplementation() {
+    return "ConcreteImplementationB";
+  }
+}
+
+const implementation1 = new ConcreteImplementationA();
+const abstraction1 = new Abstraction(implementation1);
+console.log(abstraction1.operation());  // Abstraction: ConcreteImplementationA
+
+Composite:
+javascript
+class Component {
+  constructor(name) {
+    this.name = name;
+  }
+
+  operation() {
+    throw new Error("operation() must be implemented");
+  }
+}
+
+class Leaf extends Component {
+  operation() {
+    return `Leaf ${this.name} operation`;
+  }
+}
+
+class Composite extends Component {
+  constructor(name) {
+    super(name);
+    this.children = [];
+  }
+
+  add(component) {
+    this.children.push(component);
+  }
+
+  operation() {
+    return `Composite ${this.name} operation: ${this.children.map(child => child.operation()).join(', ')}`;
+  }
+}
+
+const tree = new Composite("Tree");
+tree.add(new Leaf("Leaf A"));
+tree.add(new Leaf("Leaf B"));
+
+console.log(tree.operation());  // Composite Tree operation: Leaf A operation, Leaf B operation
+
+Decorator:
+javascript
+class Component {
+  operation() {
+    return "Component";
+  }
+}
+
+class Decorator extends Component {
+  constructor(component) {
+    super();
+    this.component = component;
+  }
+
+  operation() {
+    return this.component.operation();
+  }
+}
+
+class ConcreteDecoratorA extends Decorator {
+  operation() {
+    return `ConcreteDecoratorA(${super.operation()})`;
+  }
+}
+
+class ConcreteDecoratorB extends Decorator {
+  operation() {
+    return `ConcreteDecoratorB(${super.operation()})`;
+  }
+}
+
+const simple = new Component();
+const decorator1 = new ConcreteDecoratorA(simple);
+const decorator2 = new ConcreteDecoratorB(decorator1);
+
+console.log(decorator2.operation());  // ConcreteDecoratorB(ConcreteDecoratorA(Component))
+
+Facade:
+javascript
+class SubsystemA {
+  operationA() {
+    return "Subsystem A";
+  }
+}
+
+class SubsystemB {
+  operationB() {
+    return "Subsystem B";
+  }
+}
+
+class Facade {
+  constructor() {
+    this.subsystemA = new SubsystemA();
+    this.subsystemB = new SubsystemB();
+  }
+
+  operation() {
+    return `Facade orchestrates: ${this.subsystemA.operationA()} and ${this.subsystemB.operationB()}`;
+  }
+}
+
+const facade = new Facade();
+console.log(facade.operation());  // Facade orchestrates: Subsystem A and Subsystem B
+
+Flyweight:
+javascript
+class Flyweight {
+  constructor(sharedState) {
+    this.sharedState = sharedState;
+  }
+
+  operation(uniqueState) {
+    return `Flyweight: Shared (${this.sharedState}) and unique (${uniqueState})`;
+  }
+}
+
+class FlyweightFactory {
+  constructor() {
+    this.flyweights = {};
+  }
+
+  getFlyweight(sharedState) {
+    if (!(sharedState in this.flyweights)) {
+      this.flyweights[sharedState] = new Flyweight(sharedState);
+    }
+    return this.flyweights[sharedState];
+  }
+}
+
+const factory = new FlyweightFactory();
+const flyweight1 = factory.getFlyweight("shared");
+const flyweight2 = factory.getFlyweight("shared");
+
+console.log(flyweight1.operation("unique1"));  // Flyweight: Shared (shared) and unique (unique1)
+console.log(flyweight2.operation("unique2"));  // Flyweight: Shared (shared) and unique (unique2)
+console.log(flyweight1 === flyweight2);  // true
+
+Proxy:
+javascript
+class RealSubject {
+  request() {
+    return "RealSubject: Handling request.";
+  }
+}
+
+class Proxy {
+  constructor(realSubject) {
+    this.realSubject = realSubject;
+  }
+
+  request() {
+    if (this.checkAccess()) {
+      return this.realSubject.request();
+    } else {
+      return "Proxy: Access denied.";
+    }
+  }
+
+  checkAccess() {
+    // Some check logic
+    return true;
+  }
+}
+
+const realSubject = new RealSubject();
+const proxy = new Proxy(realSubject);
+
+console.log(proxy.request());  // RealSubject: Handling request.
+3. Behavioral Patterns:
+    Chain of Responsibility
+    Command
+    Interpreter
+    Iterator
+    Mediator
+    Memento
+    Observer
+    State
+    Strategy
+    Template Method
+    Visitor
+
+    Chain of Responsibility:
+javascript
+class Handler {
+  setNext(handler) {
+    this.nextHandler = handler;
+    return handler;
+  }
+
+  handle(request) {
+    if (this.nextHandler) {
+      return this.nextHandler.handle(request);
+    }
+    return null;
+  }
+}
+
+class ConcreteHandler1 extends Handler {
+  handle(request) {
+    if (request === 'request1') {
+      return `Handler1: I'll handle the ${request}.`;
+    }
+    return super.handle(request);
+  }
+}
+
+class ConcreteHandler2 extends Handler {
+  handle(request) {
+    if (request === 'request2') {
+      return `Handler2: I'll handle the ${request}.`;
+    }
+    return super.handle(request);
+  }
+}
+
+const handler1 = new ConcreteHandler1();
+const handler2 = new ConcreteHandler2();
+handler1.setNext(handler2);
+
+console.log(handler1.handle('request1'));  // Handler1: I'll handle the request1.
+console.log(handler1.handle('request2'));  // Handler2: I'll handle the request2.
+
+Command:
+javascript
+class Command {
+  execute() {
+    throw new Error('execute() must be implemented');
+  }
+}
+
+class LightOnCommand extends Command {
+  constructor(light) {
+    super();
+    this.light = light;
+  }
+
+  execute() {
+    this.light.turnOn();
+  }
+}
+
+class Light {
+  turnOn() {
+    console.log('Light is on');
+  }
+}
+
+class RemoteControl {
+  submit(command) {
+    command.execute();
+  }
+}
+
+const light = new Light();
+const lightOnCommand = new LightOnCommand(light);
+const remote = new RemoteControl();
+
+remote.submit(lightOnCommand);  // Light is on
+
+Interpreter:
+javascript
+class Context {
+  constructor(input) {
+    this.input = input;
+    this.output = 0;
+  }
+}
+
+class Expression {
+  interpret(context) {
+    throw new Error('interpret() must be implemented');
+  }
+}
+
+class PlusExpression extends Expression {
+  interpret(context) {
+    context.output = context.output + 1;
+  }
+}
+
+class MinusExpression extends Expression {
+  interpret(context) {
+    context.output = context.output - 1;
+  }
+}
+
+const context = new Context('+ + -');
+const expressions = [];
+
+for (let char of context.input) {
+  switch(char) {
+    case '+':
+      expressions.push(new PlusExpression());
+      break;
+    case '-':
+      expressions.push(new MinusExpression());
+      break;
+  }
+}
+
+expressions.forEach(expression => expression.interpret(context));
+console.log(context.output);  // 1
+
+Iterator:
+javascript
+class Iterator {
+  constructor(collection) {
+    this.collection = collection;
+    this.index = 0;
+  }
+
+  next() {
+    return this.collection[this.index++];
+  }
+
+  hasNext() {
+    return this.index < this.collection.length;
+  }
+}
+
+class Collection {
+  constructor() {
+    this.items = [];
+  }
+
+  addItem(item) {
+    this.items.push(item);
+  }
+
+  createIterator() {
+    return new Iterator(this.items);
+  }
+}
+
+const collection = new Collection();
+collection.addItem('A');
+collection.addItem('B');
+collection.addItem('C');
+
+const iterator = collection.createIterator();
+while(iterator.hasNext()) {
+  console.log(iterator.next());
+}
+// A
+// B
+// C
+
+Mediator:
+javascript
+class Mediator {
+  notify(sender, event) {}
+}
+
+class ConcreteMediator extends Mediator {
+  constructor(component1, component2) {
+    super();
+    this.component1 = component1;
+    this.component1.setMediator(this);
+    this.component2 = component2;
+    this.component2.setMediator(this);
+  }
+
+  notify(sender, event) {
+    if (event === 'A') {
+      console.log('Mediator reacts on A and triggers following operations:');
+      this.component2.doC();
+    }
+    if (event === 'D') {
+      console.log('Mediator reacts on D and triggers following operations:');
+      this.component1.doB();
+      this.component2.doC();
+    }
+  }
+}
+
+class BaseComponent {
+  setMediator(mediator) {
+    this.mediator = mediator;
+  }
+}
+
+class Component1 extends BaseComponent {
+  doA() {
+    console.log('Component 1 does A.');
+    this.mediator.notify(this, 'A');
+  }
+
+  doB() {
+    console.log('Component 1 does B.');
+  }
+}
+
+class Component2 extends BaseComponent {
+  doC() {
+    console.log('Component 2 does C.');
+  }
+
+  doD() {
+    console.log('Component 2 does D.');
+    this.mediator.notify(this, 'D');
+  }
+}
+
+const c1 = new Component1();
+const c2 = new Component2();
+const mediator = new ConcreteMediator(c1, c2);
+
+c1.doA();
+c2.doD();
+
+Memento:
+javascript
+class Originator {
+  constructor(state) {
+    this.state = state;
+  }
+
+  createMemento() {
+    return new Memento(this.state);
+  }
+
+  restoreMemento(memento) {
+    this.state = memento.getState();
+  }
+
+  getState() {
+    return this.state;
+  }
+
+  setState(state) {
+    this.state = state;
+  }
+}
+
+class Memento {
+  constructor(state) {
+    this.state = state;
+  }
+
+  getState() {
+    return this.state;
+  }
+}
+
+class Caretaker {
+  constructor() {
+    this.mementos = [];
+  }
+
+  addMemento(memento) {
+    this.mementos.push(memento);
+  }
+
+  getMemento(index) {
+    return this.mementos[index];
+  }
+}
+
+const originator = new Originator('State1');
+const caretaker = new Caretaker();
+
+caretaker.addMemento(originator.createMemento());
+originator.setState('State2');
+caretaker.addMemento(originator.createMemento());
+
+originator.restoreMemento(caretaker.getMemento(0));
+console.log(originator.getState());  // State1
+
+Observer:
+javascript
+class Subject {
+  constructor() {
+    this.observers = [];
+  }
+
+  addObserver(observer) {
+    this.observers.push(observer);
+  }
+
+  removeObserver(observer) {
+    const index = this.observers.indexOf(observer);
+    if (index > -1) {
+      this.observers.splice(index, 1);
+    }
+  }
+
+  notifyObservers(data) {
+    this.observers.forEach(observer => observer.update(data));
+  }
+}
+
+class Observer {
+  update(data) {
+    console.log('Received update:', data);
+  }
+}
+
+const subject = new Subject();
+const observer1 = new Observer();
+const observer2 = new Observer();
+
+subject.addObserver(observer1);
+subject.addObserver(observer2);
+
+subject.notifyObservers('Hello observers!');
+
+State:
+javascript
+class State {
+  handle(context) {
+    throw new Error('handle() must be implemented');
+  }
+}
+
+class ConcreteStateA extends State {
+  handle(context) {
+    console.log('ConcreteStateA handles request');
+    context.setState(new ConcreteStateB());
+  }
+}
+
+class ConcreteStateB extends State {
+  handle(context) {
+    console.log('ConcreteStateB handles request');
+    context.setState(new ConcreteStateA());
+  }
+}
+
+class Context {
+  constructor() {
+    this.state = new ConcreteStateA();
+  }
+
+  setState(state) {
+    this.state = state;
+  }
+
+  request() {
+    this.state.handle(this);
+  }
+}
+
+const context = new Context();
+context.request();  // ConcreteStateA handles request
+context.request();  // ConcreteStateB handles request
+
+Strategy:
+javascript
+class Strategy {
+  execute(a, b) {
+    throw new Error('execute() must be implemented');
+  }
+}
+
+class AddStrategy extends Strategy {
+  execute(a, b) {
+    return a + b;
+  }
+}
+
+class SubtractStrategy extends Strategy {
+  execute(a, b) {
+    return a - b;
+  }
+}
+
+class Context {
+  constructor(strategy) {
+    this.strategy = strategy;
+  }
+
+  setStrategy(strategy) {
+    this.strategy = strategy;
+  }
+
+  executeStrategy(a, b) {
+    return this.strategy.execute(a, b);
+  }
+}
+
+const context = new Context(new AddStrategy());
+console.log(context.executeStrategy(5, 3));  // 8
+
+context.setStrategy(new SubtractStrategy());
+console.log(context.executeStrategy(5, 3));  // 2
+
+Template Method:
+javascript
+class AbstractClass {
+  templateMethod() {
+    this.baseOperation1();
+    this.requiredOperation1();
+    this.baseOperation2();
+    this.hook();
+  }
+
+  baseOperation1() {
+    console.log('AbstractClass: I am doing the bulk of the work');
+  }
+
+  baseOperation2() {
+    console.log('AbstractClass: But I let subclasses override some operations');
+  }
+
+  requiredOperation1() {
+    throw new Error('requiredOperation1() must be implemented');
+  }
+
+  hook() {}
+}
+
+class ConcreteClass extends AbstractClass {
+  requiredOperation1() {
+    console.log('ConcreteClass: Implemented Operation1');
+  }
+
+  hook() {
+    console.log('ConcreteClass: Overridden Hook');
+  }
+}
+
+const concrete = new ConcreteClass();
+concrete.templateMethod();
+
+Visitor:
+javascript
+class ConcreteElementA {
+  accept(visitor) {
+    visitor.visitConcreteElementA(this);
+  }
+
+  operationA() {
+    return 'ConcreteElementA';
+  }
+}
+
+class ConcreteElementB {
+  accept(visitor) {
+    visitor.visitConcreteElementB(this);
+  }
+
+  operationB() {
+    return 'ConcreteElementB';
+  }
+}
+
+class ConcreteVisitor1 {
+  visitConcreteElementA(element) {
+    console.log(`${element.operationA()} + ConcreteVisitor1`);
+  }
+
+  visitConcreteElementB(element) {
+    console.log(`${element.operationB()} + ConcreteVisitor1`);
+  }
+}
+
+class ConcreteVisitor2 {
+  visitConcreteElementA(element) {
+    console.log(`${element.operationA()} + ConcreteVisitor2`);
+  }
+
+  visitConcreteElementB(element) {
+    console.log(`${element.operationB()} + ConcreteVisitor2`);
+  }
+}
+
+const elements = [
+  new ConcreteElementA(),
+  new ConcreteElementB()
+];
+
+const visitor1 = new ConcreteVisitor1();
+const visitor2 = new ConcreteVisitor2();
+
+elements.forEach(element => {
+  element.accept(visitor1);
+  element.accept(visitor2);
+});
+These patterns are derived from the Gang of Four (GoF) design patterns, which are considered the foundation for most other patterns. While originally conceived for statically-typed languages, these patterns have been adapted and implemented in JavaScript, taking advantage of its dynamic and flexible nature.
+It's worth noting that some patterns may be implemented differently in JavaScript compared to classical OOP languages due to JavaScript's prototype-based inheritance and functional programming capabilities. Additionally, JavaScript has some patterns that are more specific to its ecosystem, like the Module pattern, which isn't part of the original GoF patterns but is widely used in JavaScript for encapsulation and namespace management.
