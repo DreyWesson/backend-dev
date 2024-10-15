@@ -7,7 +7,7 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand --detectOpenHandles",
     "start:test": "npx cross-env NODE_ENV=test nodemon server.js",
-    "start:dev": "npx cross-env NODE_ENV=development nodemon --legacy-watch server.js",
+    "start:dev": "npx cross-env NODE_ENV=development nodemon server.js",
     "start:staging": "npx cross-env NODE_ENV=staging node server.js",
     "start:prod": "npx cross-env NODE_ENV=production node server.js"
   },
@@ -30,9 +30,11 @@
     "jsonwebtoken": "^9.0.2",
     "moment-timezone": "^0.5.46",
     "mongodb": "^6.7.0",
-    "mongoose": "^8.4.1",
+    "mongoose": "^8.7.1",
     "morgan": "^1.10.0",
-    "pg": "^8.12.0",
+    "pg": "^8.13.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.4",
     "supertest": "^7.0.0",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^10.0.0",
