@@ -25,3 +25,12 @@ clean:
 fclean:
 	@echo "Destroying All Containers"
 	@docker system prune -a -f
+
+stop:
+	@echo "Stopping all services gracefully"
+	@$(DOCKER_COMPOSE) stop
+
+rebuild:
+	@echo "Rebuilding and restarting service: $(SERVICE)"
+	@$(DOCKER_COMPOSE) up --build --force-recreate --no-deps $(SERVICE)
+

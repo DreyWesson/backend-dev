@@ -13,17 +13,26 @@ class Logger {
 
     const logDirectoryPath = path.join(__dirname, "..", "logs");
     const dateFormat = "yyyy-MM-dd HH:mm:ss";
-    this.logger = createCustomLogger(logDirectoryPath, dateFormat);
+    this.loggers = {
+      info: createCustomLogger(logDirectoryPath, dateFormat, 'application-info'),
+      error: createCustomLogger(logDirectoryPath, dateFormat, 'application-error'),
+      serverError: createCustomLogger(logDirectoryPath, dateFormat, 'server-error')
+    };
 
     Logger.instance = this;
   }
 
   async writeLog(level, requestId, logMessage) {
-    if (this.logger && typeof this.logger.log === "function") {
-      this.logger.log({ level, message: logMessage, requestId });
+    const logger = this.loggers[level] || this.loggers.info;
+    if (logger && typeof logger.log === "function") {
+      await logger.log({ level, message: logMessage, requestId });
     } else {
-      console.warn("Logger implementation does not support 'log' method.");
+      console.warn(`Logger implementation does not support '${level}' level.`);
     }
+  }
+
+  async writeServerError(errorMessage) {
+    await this.loggers.serverError.log({ level: 'error', message: errorMessage });
   }
 }
 

@@ -1,6 +1,7 @@
 import { decryptMetadata } from "../utils/encryption.js";
 import { loggerInstance } from "../services/logger.js";
 
+
 class Log {
   constructor() {
     if (Log.instance) {
@@ -8,6 +9,7 @@ class Log {
     }
     Log.instance = this;
   }
+
   logRequest = async (req, res, next) => {
     const { method, headers, url, metadata } = req;
     const { origin } = headers;

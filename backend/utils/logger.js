@@ -2,8 +2,6 @@ import path from "path";
 import { promises as fs } from "fs";
 import chalk from "chalk";
 import { format } from "date-fns";
-// import DailyRotateFile from "winston-daily-rotate-file";
-// import { createLogger, format as winstonFormat, transports as winstonTransports } from "winston";
 
 export async function createLogDirectory(logDirectory) {
   try {
@@ -28,12 +26,12 @@ function getColor(level) {
   }
 }
 
-export function createCustomLogger(logDirectory, dateFormat) {
+export function createCustomLogger(logDirectory, dateFormat, logFileName) {
   createLogDirectory(logDirectory);
 
   const logFilePath = path.join(
     logDirectory,
-    `application-${format(new Date(), "yyyy-MM-dd")}.log`
+    `${logFileName}-${format(new Date(), "yyyy-MM-dd")}.log`
   );
 
   return {

@@ -1,0 +1,20 @@
+1. (Object-Literal): const obj = { name: "john doe" };
+2. (Constructor-Function): function obj(name) { this.name = name};
+3. (class synthax): class Obj {
+    constructor(name) {
+      this.name = name;
+    }
+  }
+4. (Object.create): const sample2 = Object.create({
+    name: "john doe"
+});
+
+5. (Object.Assign): const obj = Object.assign({}, {name: ""})
+
+6. (Object.fromEntries): const obj = Object.fromEntries([["name", ""]])
+
+7. function factory: function(name) {return {name}}
+
+8. (new Object): const obj = new Object()
+  obj.name = ""
+
