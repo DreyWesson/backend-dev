@@ -2,7 +2,12 @@ import { decryptMetadata } from "../utils/encryption.js";
 import { loggerInstance } from "../services/logger.js";
 
 class Log {
-  constructor() {}
+  constructor() {
+    if (Log.instance) {
+      return Log.instance;
+    }
+    Log.instance = this;
+  }
   logRequest = async (req, res, next) => {
     const { method, headers, url, metadata } = req;
     const { origin } = headers;
@@ -14,7 +19,6 @@ class Log {
     } catch (error) {
       console.error("Error logging request:", error);
     }
-
     next();
   };
 
