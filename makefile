@@ -2,35 +2,35 @@ DOCKER_COMPOSE = docker-compose -f docker-compose.yml -f docker-compose.database
 
 SERVICE ?= all
 
-restart:
-	@echo "Restarting service: $(SERVICE)"
-	@$(DOCKER_COMPOSE) restart $(SERVICE)
-
 build:
 	@echo "Building and starting service: $(SERVICE)"
 	@$(DOCKER_COMPOSE) up --build --no-deps $(SERVICE)
-
-run:
-	@echo "Running all services"
-	@$(DOCKER_COMPOSE) up
 
 build-all:
 	@echo "Building and starting all services"
 	@$(DOCKER_COMPOSE) up --build
 
-clean:
+down:
 	@echo "Cleaning up containers"
 	@$(DOCKER_COMPOSE) down -v
 
-fclean:
+prune:
 	@echo "Destroying All Containers"
-	@docker system prune -a -f
+	@docker system prune -a
+
+restart:
+	@echo "Restarting service: $(SERVICE)"
+	@$(DOCKER_COMPOSE) restart $(SERVICE)
+
+rebuild:
+	@echo "Rebuilding and restarting service: $(SERVICE)"
+	@$(DOCKER_COMPOSE) up --build --force-recreate --no-deps $(SERVICE)
 
 stop:
 	@echo "Stopping all services gracefully"
 	@$(DOCKER_COMPOSE) stop
 
-rebuild:
-	@echo "Rebuilding and restarting service: $(SERVICE)"
-	@$(DOCKER_COMPOSE) up --build --force-recreate --no-deps $(SERVICE)
+up:
+	@echo "Running all services"
+	@$(DOCKER_COMPOSE) up
 
