@@ -1,5 +1,5 @@
 import { decryptMetadata } from "../utils/encryption.js";
-import { loggerInstance } from "../services/logger.js";
+import { Logger } from "../services/logger.js";
 
 
 class Log {
@@ -17,7 +17,7 @@ class Log {
     const message = `${method} ${origin || "Unknown Origin"} ${url}`;
 
     try {
-      await loggerInstance.writeLog("info", requestId, message);
+      await Logger.writeLog("info", requestId, message);
     } catch (error) {
       console.error("Error logging request:", error);
     }
@@ -31,7 +31,7 @@ class Log {
     const requestId = decryptMetadata(req.metadata).requestId;
 
     try {
-      await loggerInstance.writeLog("error", requestId, logMessage);
+      await Logger.writeLog("error", requestId, logMessage);
     } catch (logError) {
       console.error("Error logging error:", logError);
     }

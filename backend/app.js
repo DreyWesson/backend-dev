@@ -4,7 +4,7 @@ import cors from "cors";
 import { requestId } from "./middleware/requestId.js";
 import { logs } from "./middleware/logger.js";
 import allAPIRoutes from "./routes/index.js";
-import { loggerInstance } from "./services/logger.js";
+import { Logger } from "./services/logger.js";
 
 dotenv.config();
 
@@ -40,7 +40,6 @@ export class Server {
         await server.init();
         return server;
     } catch (error) {
-        // console.log("################## ERRRROORRRR")
         throw new Error("Error creating server");
     }
   }
@@ -77,14 +76,13 @@ export class Server {
     return new Promise((resolve, reject) => {
       server.close(async (err) => {
         if (err) {
-          await loggerInstance.writeServerError(
+          await Logger.writeServerError(
             `Error stopping server: ${err.message}`
           );
           reject(err);
           return;
         }
 
-        // Close the database connection
         await this.db.disconnect();
         resolve();
       });
@@ -112,7 +110,7 @@ export function errorHandlers(app) {
   app.use(logs.logError);
 
   app.use((err, req, res, next) => {
-    loggerInstance.writeServerError(`Error: ${err.stack}`);
+    Logger.writeServerError(`Error: ${err.stack}`);
     res.status(500).send("Something broke!");
   });
 }

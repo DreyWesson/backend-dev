@@ -10,7 +10,7 @@ services:
       - mongo_data:/data/db
     networks:
       - laser-network
-    restart: on-failure:5
+    restart: always
 
   psql:
     image: postgres:latest
@@ -23,7 +23,7 @@ services:
       - psql_data:/var/lib/postgresql/data
     networks:
       - laser-network
-    restart: on-failure:5
+    restart: always
 
 volumes:
   mongo_data: {}

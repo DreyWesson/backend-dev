@@ -14,6 +14,7 @@ services:
     command: npm run start:dev
     networks:
       - laser-network
+    restart: always
     depends_on:
       - mongo
       - psql

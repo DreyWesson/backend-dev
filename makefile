@@ -15,8 +15,12 @@ down:
 	@$(DOCKER_COMPOSE) down -v
 
 prune:
-	@echo "Destroying All Containers"
-	@docker system prune -a
+	@echo "Stopping all services gracefully"
+	@$(DOCKER_COMPOSE) stop
+	@echo "Cleaning up containers"
+	@$(DOCKER_COMPOSE) down -v
+	@echo "Destroying All Containers and Unused Images"
+	@docker system prune -af
 
 restart:
 	@echo "Restarting service: $(SERVICE)"
