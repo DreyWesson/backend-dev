@@ -3,6 +3,9 @@ import { config } from "dotenv";
 
 config()
 
+const MAX_RETRIES = 5;
+const RETRY_DELAY = 5000;
+
 const sequelize = new Sequelize(process.env.PG_URI, {
   dialect: "postgres",
   logging: false,
@@ -21,16 +24,22 @@ const sequelize = new Sequelize(process.env.PG_URI, {
 });
 
 export const connectPostgres = async () => {
-  try {
-    await sequelize.authenticate();
-    if (process.env.NODE_ENV !== "production")
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      await sequelize.authenticate();
       console.log("PostgreSQL connected successfully");
-  } catch (error) {
-    console.error("PostgreSQL connection error:", error);
-    throw error;
+      return;
+    } catch (error) {
+      console.error(`PostgreSQL connection error (attempt ${i + 1}/${MAX_RETRIES}):`, error);
+      if (i < MAX_RETRIES - 1) {
+        console.log(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      } else {
+        throw error;
+      }
+    }
   }
 };
-
 
 export const disconnectPostgres = async () => {
   try {

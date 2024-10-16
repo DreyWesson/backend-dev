@@ -1,0 +1,143 @@
+
+# input {
+#   file {
+#     path => "/logs/*.log"
+#     start_position => "beginning"
+#     sincedb_path => "/dev/null"
+#     codec => "plain"
+#   }
+# }
+
+# filter {
+#   if [message] =~ /^\s*$/ {
+#     drop { }
+#   }
+
+#   grok {
+#     match => {
+#       "message" => "^%{TIMESTAMP_ISO8601:log_timestamp}\s+\[%{LOGLEVEL:log_level}\]\s+\[RequestId:\s+%{UUID:request_id}\]:\s+%{GREEDYDATA:log_message}$"
+#     }
+#     remove_field => ["@version", "host"]
+#     tag_on_failure => ["_grokparsefailure"]
+#   }
+
+#   if "_grokparsefailure" in [tags] or ![log_timestamp] or ![log_level] or ![request_id] or ![log_message] {
+#     drop { }
+#   }
+
+#   date {
+#     match => ["log_timestamp", "yyyy-MM-dd HH:mm:ss"]
+#     target => "@timestamp"
+#     remove_field => ["log_timestamp"]
+#   }
+
+#   mutate {
+#     add_field => {
+#       "event.dataset" => "application-logs"
+#     }
+#     rename => { "log_level" => "log.level" }
+#     rename => { "log_message" => "message" }
+#   }
+
+#   prune {
+#     whitelist_names => ["@timestamp", "message", "request_id", "log.level", "event.dataset"]
+#   }
+# }
+
+# output {
+#   stdout { codec => rubydebug }
+#   elasticsearch {
+#     hosts => ["http://elasticsearch:9200"]
+#     index => "application-logs-%{+YYYY.MM.dd}"
+#   }
+# }
+
+
+
+
+input {
+  file {
+    path => "/logs/application*.log"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+    codec => "plain"
+  }
+  file {
+    path => "/logs/server-error*.log"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+    codec => "plain"
+  }
+}
+
+filter {
+  if [message] =~ /^\s*$/ {
+    drop { }
+  }
+
+  grok {
+    match => {
+      "message" => "^%{TIMESTAMP_ISO8601:log_timestamp}\s+\[%{LOGLEVEL:log_level}\]\s+\[RequestId:\s+%{UUID:request_id}\]:\s+%{GREEDYDATA:log_message}$"
+    }
+    remove_field => ["@version", "host"]
+    tag_on_failure => ["_grokparsefailure"]
+  }
+
+  if "_grokparsefailure" in [tags] {
+    grok {
+      match => {
+        "message" => "^%{TIMESTAMP_ISO8601:log_timestamp}\s+\[%{LOGLEVEL:log_level}\]:\s+%{GREEDYDATA:log_message}$"
+      }
+      remove_field => ["@version", "host"]
+      tag_on_failure => ["_grokparsefailure2"]
+    }
+  }
+
+  if "_grokparsefailure" in [tags] and "_grokparsefailure2" in [tags] {
+    drop { }
+  }
+
+  date {
+    match => ["log_timestamp", "yyyy-MM-dd HH:mm:ss"]
+    target => "@timestamp"
+    remove_field => ["log_timestamp"]
+  }
+
+  mutate {
+    add_field => {
+      "event.dataset" => "application-logs"
+    }
+    rename => { "log_level" => "log.level" }
+    rename => { "log_message" => "message" }
+  }
+
+  if [path] =~ /server-error/ {
+    mutate {
+      add_field => { "log_type" => "server_error" }
+    }
+  } else if [path] =~ /application-error/ {
+    mutate {
+      add_field => { "log_type" => "application_error" }
+    }
+  } else if [path] =~ /application-info/ {
+    mutate {
+      add_field => { "log_type" => "application_info" }
+    }
+  } else {
+    mutate {
+      add_field => { "log_type" => "general" }
+    }
+  }
+
+  prune {
+    whitelist_names => ["@timestamp", "message", "request_id", "log.level", "event.dataset", "log_type"]
+  }
+}
+
+output {
+  stdout { codec => rubydebug }
+  elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+    index => "application-logs-%{+YYYY.MM.dd}"
+  }
+}
