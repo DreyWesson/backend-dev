@@ -15,17 +15,17 @@ export class Server {
     middlewares = [],
     routes,
     errorHandlers,
-    db,
+    allEndpoints,
   }) {
     this.app = app;
     this.config = config;
     this.middlewares = middlewares;
     this.routes = routes;
     this.errorHandlers = errorHandlers;
-    this.db = db;
+    this.allEndpoints = allEndpoints;
   }
 
-  static async create({ config, middlewares = [], routes, errorHandlers, db }) {
+  static async create({ config, middlewares = [], routes, errorHandlers, allEndpoints }) {
     try { 
         const app = express();
         const server = new Server({
@@ -34,7 +34,7 @@ export class Server {
           middlewares,
           routes,
           errorHandlers,
-          db,
+          allEndpoints,
         });
     
         await server.init();
@@ -55,7 +55,7 @@ export class Server {
   }
 
   setupRoutes() {
-    this.routes(this.app, this.db);
+    this.routes(this.app, this.allEndpoints);
   }
 
   setupErrorHandlers() {
@@ -83,7 +83,7 @@ export class Server {
           return;
         }
 
-        await this.db.disconnect();
+        // await this.allEndpoints.disconnect();
         resolve();
       });
     });
@@ -98,8 +98,8 @@ export const defaultMiddlewares = [
   express.urlencoded({ extended: true }),
 ];
 
-export function routes(app, db) {
-  app.use("/api/v1", allAPIRoutes(db));
+export function routes(app, allEndpoints) {
+  app.use("/api/v1", allAPIRoutes(allEndpoints));
   app.get("/error", (req, res, next) => {
     next(new Error("Deliberate error: testing error middleware"));
   });

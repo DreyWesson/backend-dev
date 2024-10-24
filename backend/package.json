@@ -7,7 +7,7 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand --detectOpenHandles",
     "start:test": "npx cross-env NODE_ENV=test nodemon server.js",
-    "start:dev": "npx cross-env NODE_ENV=development nodemon server.js",
+    "start:dev": "exec npx cross-env NODE_ENV=development nodemon server.js",
     "start:staging": "npx cross-env NODE_ENV=staging node server.js",
     "start:prod": "npx cross-env NODE_ENV=production node server.js"
   },
